@@ -1,7 +1,7 @@
 [package]
 name = "tests"
 version = "0.1.0"
-authors = ["prin-r <q@bandprotocol.com>"]
+authors = ["prin-r"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 hex = "0.4.2"
 obi = { version = "0.0.1" }
+tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
 casperlabs-contract = "0.5.0"

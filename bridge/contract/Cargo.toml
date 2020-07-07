@@ -1,15 +1,16 @@
 [package]
 name = "contract"
 version = "0.1.0"
-authors = ["prin-r <q@bandprotocol.com>"]
+authors = ["prin-r"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-casperlabs-contract = "0.5.0"
-casperlabs-types = "0.5.0"
+casperlabs-contract = "0.5.1"
+casperlabs-types = "0.5.1"
 obi = { version = "0.0.1" }
+hex = "0.4.2"
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [[bin]]
