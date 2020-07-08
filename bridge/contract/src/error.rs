@@ -4,6 +4,7 @@ use casperlabs_types::ApiError;
 pub enum Error {
     UnknownBridgeCallCommand = 1,      // 65537
     UnknownApiCommand = 2,             // 65538
+    FailToDecodeProof = 3,             // 65539
     MissingArgument0 = 16,             // 65552
     MissingArgument1 = 17,             // 65553
     MissingArgument2 = 18,             // 65554
