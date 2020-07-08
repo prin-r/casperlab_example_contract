@@ -78,13 +78,13 @@ mod tests {
 
         let mock_packet = MyPacket::new_test_packet();
         let key = hex::encode(&mock_packet.req.get_hash());
-        let value = hex::decode("0000000966726f6e745f656e6400000000000000010000000f00000003425443000000003b9aca0000000000000000040000000000000002").unwrap();
+        let value = hex::decode("0000000966726f6e745f656e6400000000000000010000000f00000003425443000000003b9aca00000000000000000400000000000000020000000966726f6e745f656e6400000000000034fd0000000000000004000000005eec6083000000005eec608701000000080000000000000000").unwrap();
 
         println!("{:?}", mock_packet.req.get_hash());
         println!("{:?}", hex::encode(mock_packet.req.try_to_vec().unwrap()));
 
         // assert_eq!(
-        //     hex::encode(&mock_packet.req.get_hash()),
+        //     hex::encode(&mock_packet.try_to_vec().unwrap()),
         //     String::from("0xaa")
         // );
 

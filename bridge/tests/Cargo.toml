@@ -12,8 +12,8 @@ obi = { version = "0.0.1" }
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
-casperlabs-contract = "0.5.0"
-casperlabs-types = "0.5.0"
+casperlabs-contract = "0.5.1"
+casperlabs-types = "0.5.1"
 casperlabs-engine-test-support = "0.7.0"
 
 [[bin]]
