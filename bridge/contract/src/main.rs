@@ -57,13 +57,14 @@ impl Req {
 #[no_mangle]
 pub extern "C" fn call() {
     match Api::from_args() {
-        Api::RELAY_AND_VERIFY(proof) => {
-            let bp = MyPacket::try_from_slice(&proof).unwrap();
-
-            let value_ref: URef = storage::new_uref(proof);
-            let value_key: Key = value_ref.into();
-            runtime::put_key(&hex::encode(bp.req.get_hash()), value_key);
-        }
+        Api::RELAY_AND_VERIFY(proof) => match MyPacket::try_from_slice(&proof) {
+            Ok(bp) => {
+                let value_ref: URef = storage::new_uref(proof);
+                let value_key: Key = value_ref.into();
+                runtime::put_key(&hex::encode(bp.req.get_hash()), value_key);
+            }
+            Err(_) => runtime::revert(Error::FailToDecodeProof),
+        },
         _ => runtime::revert(Error::UnknownBridgeCallCommand),
     }
 }
@@ -71,13 +72,14 @@ pub extern "C" fn call() {
 #[no_mangle]
 pub extern "C" fn my_contract() {
     match Api::from_args() {
-        Api::RELAY_AND_VERIFY(proof) => {
-            let bp = MyPacket::try_from_slice(&proof).unwrap();
-
-            let value_ref: URef = storage::new_uref(proof);
-            let value_key: Key = value_ref.into();
-            runtime::put_key(&hex::encode(bp.req.get_hash()), value_key);
-        }
+        Api::RELAY_AND_VERIFY(proof) => match MyPacket::try_from_slice(&proof) {
+            Ok(bp) => {
+                let value_ref: URef = storage::new_uref(proof);
+                let value_key: Key = value_ref.into();
+                runtime::put_key(&hex::encode(bp.req.get_hash()), value_key);
+            }
+            Err(_) => runtime::revert(Error::FailToDecodeProof),
+        },
         _ => runtime::revert(Error::UnknownBridgeCallCommand),
     }
 }
