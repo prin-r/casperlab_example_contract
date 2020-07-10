@@ -4,13 +4,7 @@
 )]
 #![no_main]
 
-// mod api;
 mod error;
-
-// use std::{
-//     collections::{BTreeMap, BTreeSet},
-//     string::String,
-// };
 
 use hex;
 use obi::{OBIDecode, OBIEncode};
@@ -29,6 +23,7 @@ use casperlabs_types::{
 use crate::error::Error;
 
 pub const CONTRACT_NAME: &str = "pocket_storage_contract";
+pub const CONTRACT_HASH: &str = "pocket_storage_contract_hash";
 pub const RELAY_AND_VERIFY_METHOD: &str = "relay_and_verify";
 pub const PROOF_ARG: &str = "proof";
 
@@ -78,24 +73,31 @@ pub extern "C" fn call() {
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
-    let (hash, _version) = storage::new_contract(
+    let (contract, _version) = storage::new_contract(
         entry_points, None, None, None
     );
-    let hash_key = storage::new_uref(hash);
-    runtime::put_key(CONTRACT_NAME, hash_key.into());
+
+    // Save a contract 
+    let contract_key: Key = storage::new_uref(contract).into();
+    runtime::put_key(CONTRACT_NAME, contract_key);
+
+    // Save a hash
+    let contract_hash: Key = storage::new_uref(contract_key).into();
+    runtime::put_key(CONTRACT_HASH, contract_hash);
+
 }
 
 #[no_mangle]
 pub extern "C" fn relay_and_verify() {
-    let value = storage::new_uref(123).into();
-    runtime::put_key("bbb", value);
+    // let value = storage::new_uref(123).into();
+    // runtime::put_key("bbb", value);
 
-    // let proof: Vec<u8> = runtime::get_named_arg(PROOF_ARG);
-    // match MyPacket::try_from_slice(&proof) {
-    //     Ok(bp) => {
-    //         let value = storage::new_uref(123).into();
-    //         runtime::put_key("bbb", value);
-    //     }
-    //     Err(_) => runtime::revert(Error::FailToDecodeProof),
-    // }
+    let proof: Vec<u8> = runtime::get_named_arg(PROOF_ARG);
+    match MyPacket::try_from_slice(&proof) {
+        Ok(bp) => {
+            let value = storage::new_uref(123).into();
+            runtime::put_key(&hex::encode(&bp.req.get_hash()), value);
+        }
+        Err(_) => runtime::revert(Error::FailToDecodeProof),
+    }
 }

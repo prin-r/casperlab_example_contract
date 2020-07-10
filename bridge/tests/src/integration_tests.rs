@@ -77,6 +77,7 @@ mod tests {
     const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
 
     const CONTRACT_NAME: &str = "pocket_storage_contract";
+    const CONTRACT_HASH: &str = "pocket_storage_contract_hash";
     const RELAY_AND_VERIFY_METHOD: &str = "relay_and_verify";
     const PROOF_ARG: &str = "proof";
 
@@ -96,9 +97,10 @@ mod tests {
 
         deploy_contract(&mut context);
         call_relay_and_verify(&mut context, value, MY_ACCOUNT);
-        // let value: Vec<u8> = query_contract(&context, "bbb").unwrap();
-        let value = context.get_account(MY_ACCOUNT);
-        println!("{:?}", value);
+
+        let value: Vec<u8> = query_contract(&context, "bbb").unwrap();
+        // let value = context.get_account(MY_ACCOUNT);
+        // println!("{:?}", value);
 
 
         // assert_eq!(
@@ -135,11 +137,11 @@ mod tests {
     }
 
     fn query_contract<T: CLTyped + FromBytes>(context: &TestContext, name: &str) -> Option<T> {
-        match context.query(
-            MY_ACCOUNT,
-            &[CONTRACT_NAME, &name.to_string()],
-        ) {
-            Err(_) => None,
+        match context.query(MY_ACCOUNT, &[CONTRACT_NAME, name]) {
+            Err(e) => {
+                println!("eee: {:?}", e);
+                None
+            },
             Ok(maybe_value) => {
                 let value = maybe_value
                     .into_t()
