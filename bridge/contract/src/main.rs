@@ -78,11 +78,10 @@ pub extern "C" fn call() {
     );
 
     // Save a contract 
-    let contract_key: Key = storage::new_uref(contract).into();
-    runtime::put_key(CONTRACT_NAME, contract_key);
+    runtime::put_key(CONTRACT_NAME, contract.into());
 
     // Save a hash
-    let contract_hash: Key = storage::new_uref(contract_key).into();
+    let contract_hash: Key = storage::new_uref(contract).into();
     runtime::put_key(CONTRACT_HASH, contract_hash);
 
 }
@@ -95,7 +94,7 @@ pub extern "C" fn relay_and_verify() {
     let proof: Vec<u8> = runtime::get_named_arg(PROOF_ARG);
     match MyPacket::try_from_slice(&proof) {
         Ok(bp) => {
-            let value = storage::new_uref(123).into();
+            let value = storage::new_uref(proof).into();
             runtime::put_key(&hex::encode(&bp.req.get_hash()), value);
         }
         Err(_) => runtime::revert(Error::FailToDecodeProof),

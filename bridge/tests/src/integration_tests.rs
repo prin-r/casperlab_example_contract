@@ -16,7 +16,7 @@ impl Req {
         let mut keccak = Keccak::v256();
         let mut output = [0u8; 32];
         keccak.update(&(self.try_to_vec().unwrap()));
-        keccak.finalize(&mut output);
+        keccak.finDELOYER_ACCOUNTze(&mut output);
         output
     }
 }
@@ -63,7 +63,6 @@ impl MyPacket {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use casperlabs_engine_test_support::{
         Code, Hash, SessionBuilder, TestContext, TestContextBuilder
     };
@@ -71,10 +70,11 @@ mod tests {
         account::AccountHash, bytesrepr::FromBytes, 
         runtime_args, CLTyped, RuntimeArgs, U512,
     };
-
     use hex;
+    use super::*;
 
-    const MY_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
+    const DELOYER_ACCOUNT: AccountHash = AccountHash::new([7u8; 32]);
+    const BOB: AccountHash = AccountHash::new([8u8; 32]);
 
     const CONTRACT_NAME: &str = "pocket_storage_contract";
     const CONTRACT_HASH: &str = "pocket_storage_contract_hash";
@@ -83,74 +83,49 @@ mod tests {
 
     #[test]
     fn should_store_relay_and_verify() {
-        let mut context = TestContextBuilder::new()
-            .with_account(MY_ACCOUNT, U512::from(128_000_000))
-            .build();
-
+        // Mock data.
         let mock_packet = MyPacket::new_test_packet();
         let key = hex::encode(&mock_packet.req.get_hash());
         let value = hex::decode("0000000966726f6e745f656e6400000000000000010000000f00000003425443000000003b9aca00000000000000000400000000000000020000000966726f6e745f656e6400000000000034fd0000000000000004000000005eec6083000000005eec608701000000080000000000000000").unwrap();
 
-        // println!("{:?}", mock_packet.req.get_hash());
-        // println!("{:?}", hex::encode(mock_packet.req.try_to_vec().unwrap()));
-
-
+        // Start the context and deploy the contract.
+        let mut context = TestContextBuilder::new()
+            .with_account(DELOYER_ACCOUNT, U512::from(128_000_000))
+            .build();
         deploy_contract(&mut context);
-        call_relay_and_verify(&mut context, value, MY_ACCOUNT);
 
-        let value: Vec<u8> = query_contract(&context, "bbb").unwrap();
-        // let value = context.get_account(MY_ACCOUNT);
-        // println!("{:?}", value);
+        // Call relay_and_verify by the account that never interacted with the contract.
+        call_relay_and_verify(&mut context, value, BOB);
 
-
-        // assert_eq!(
-        //     hex::encode(&mock_packet.try_to_vec().unwrap()),
-        //     String::from("0xaa")
-        // );
-
-        // The test framework checks for compiled Wasm files in '<current working dir>/wasm'.  Paths
-        // relative to the current working dir (e.g. 'wasm/contract.wasm') can also be used, as can
-        // absolute paths.
-
-        // let value = context.query(MY_ACCOUNT, &[CONTRACT_NAME, "ccc"]);
-        // println!("{:?}", value);
-        // assert_eq!(1, 2);
-
-        // println!("{:?}", hash);
-        // assert_eq!(1, 2);
-        // let result_of_query: Result<Value, Error> = context.run(session).query(MY_ACCOUNT, &[&key]);
-
-        // let returned_value = result_of_query.expect("should be a value");
-
-        // let expected_value =
-        //     Value::from_t(mock_packet.try_to_vec().unwrap()).expect("should construct Value");
-        // assert_eq!(expected_value, returned_value);
+        // Verify the response.
+        let resp_packet: MyPacket = query_contract_for_packet(&context, &key).unwrap();
+        assert_eq!(resp_packet, mock_packet);
     }
 
+    // Deploy generated wasm file.
     fn deploy_contract(context: &mut TestContext) {
         let session_code = Code::from("contract.wasm");
         let session = SessionBuilder::new(session_code, runtime_args!{})
-            .with_address(MY_ACCOUNT)
-            .with_authorization_keys(&[MY_ACCOUNT])
+            .with_address(DELOYER_ACCOUNT)
+            .with_authorization_keys(&[DELOYER_ACCOUNT])
             .build();
         context.run(session);
     }
 
-    fn query_contract<T: CLTyped + FromBytes>(context: &TestContext, name: &str) -> Option<T> {
-        match context.query(MY_ACCOUNT, &[CONTRACT_NAME, name]) {
-            Err(e) => {
-                println!("eee: {:?}", e);
-                None
-            },
+    // Read the packet from the blockchain using `query` method.
+    fn query_contract_for_packet(context: &TestContext, name: &str) -> Option<MyPacket> {
+        match context.query(DELOYER_ACCOUNT, &[CONTRACT_NAME, name]) {
+            Err(e) => None,
             Ok(maybe_value) => {
-                let value = maybe_value
+                let proof: Vec<u8> = maybe_value
                     .into_t()
                     .unwrap_or_else(|_| panic!("{} is not expected type.", name));
-                Some(value)
+                Some(MyPacket::try_from_slice(&proof).unwrap())
             }
         }
     }
 
+    // Make a call to the smart contract.
     fn call_relay_and_verify(context: &mut TestContext, value: Vec<u8>, sender: AccountHash) {
         let hash = contract_hash(&context);
         let code = Code::Hash(hash, RELAY_AND_VERIFY_METHOD.to_string());
@@ -164,15 +139,14 @@ mod tests {
         context.run(session);
     }
 
+    // Query the blockchain to retrieve contract's hash.
     fn contract_hash(context: &TestContext) -> Hash {
         context
-            .query(MY_ACCOUNT, &[CONTRACT_NAME])
+            .query(DELOYER_ACCOUNT, &[CONTRACT_HASH])
             .unwrap_or_else(|_| panic!("{} contract not found", CONTRACT_NAME))
             .into_t()
             .unwrap_or_else(|_| panic!("{} has wrong type", CONTRACT_NAME))
     }
-
-
 }
 
 fn main() {
