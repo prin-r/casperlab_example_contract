@@ -63,6 +63,7 @@ impl Req {
     }
 }
 
+// Runs in the context of the Account.
 #[no_mangle]
 pub extern "C" fn call() {
     let mut entry_points = EntryPoints::new();
@@ -80,17 +81,15 @@ pub extern "C" fn call() {
     // Save a contract 
     runtime::put_key(CONTRACT_NAME, contract.into());
 
-    // Save a hash
+    // Save a hash of a contract.
     let contract_hash: Key = storage::new_uref(contract).into();
     runtime::put_key(CONTRACT_HASH, contract_hash);
 
 }
 
+// Runs in the context of Smart Contract.
 #[no_mangle]
 pub extern "C" fn relay_and_verify() {
-    // let value = storage::new_uref(123).into();
-    // runtime::put_key("bbb", value);
-
     let proof: Vec<u8> = runtime::get_named_arg(PROOF_ARG);
     match MyPacket::try_from_slice(&proof) {
         Ok(bp) => {

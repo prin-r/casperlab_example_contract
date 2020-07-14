@@ -16,7 +16,7 @@ impl Req {
         let mut keccak = Keccak::v256();
         let mut output = [0u8; 32];
         keccak.update(&(self.try_to_vec().unwrap()));
-        keccak.finDELOYER_ACCOUNTze(&mut output);
+        keccak.finalize(&mut output);
         output
     }
 }
@@ -67,8 +67,7 @@ mod tests {
         Code, Hash, SessionBuilder, TestContext, TestContextBuilder
     };
     use casperlabs_types::{
-        account::AccountHash, bytesrepr::FromBytes, 
-        runtime_args, CLTyped, RuntimeArgs, U512,
+        account::AccountHash, runtime_args, RuntimeArgs, U512,
     };
     use hex;
     use super::*;
@@ -91,13 +90,14 @@ mod tests {
         // Start the context and deploy the contract.
         let mut context = TestContextBuilder::new()
             .with_account(DELOYER_ACCOUNT, U512::from(128_000_000))
+            .with_account(BOB, U512::from(128_000_000))
             .build();
         deploy_contract(&mut context);
 
         // Call relay_and_verify by the account that never interacted with the contract.
         call_relay_and_verify(&mut context, value, BOB);
 
-        // Verify the response.
+        // // Verify the response.
         let resp_packet: MyPacket = query_contract_for_packet(&context, &key).unwrap();
         assert_eq!(resp_packet, mock_packet);
     }
@@ -115,7 +115,7 @@ mod tests {
     // Read the packet from the blockchain using `query` method.
     fn query_contract_for_packet(context: &TestContext, name: &str) -> Option<MyPacket> {
         match context.query(DELOYER_ACCOUNT, &[CONTRACT_NAME, name]) {
-            Err(e) => None,
+            Err(_) => None,
             Ok(maybe_value) => {
                 let proof: Vec<u8> = maybe_value
                     .into_t()
