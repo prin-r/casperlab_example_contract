@@ -12,9 +12,9 @@ obi = { version = "0.0.1" }
 tiny-keccak = { version = "2.0", features = ["keccak"] }
 
 [dev-dependencies]
-casperlabs-contract = "0.5.1"
-casperlabs-types = "0.5.1"
-casperlabs-engine-test-support = "0.7.0"
+casperlabs-contract =  { git="https://github.com/CasperLabs/CasperLabs", branch="dev" }
+casperlabs-types =  { git="https://github.com/CasperLabs/CasperLabs", branch="dev" }
+casperlabs-engine-test-support =  { git="https://github.com/CasperLabs/CasperLabs", branch="dev" }
 
 [[bin]]
 name = "integration-tests"
